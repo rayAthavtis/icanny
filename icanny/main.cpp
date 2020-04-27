@@ -2,8 +2,8 @@
 //  main.cpp
 //  icanny
 //
-//  Created by 任蕾 on 2020/3/30.
-//  Copyright © 2020 任蕾. All rights reserved.
+//  Created by ray on 2020/3/30.
+//  Copyright © 2020 ray. All rights reserved.
 //
 
 #include <opencv2/core.hpp>
