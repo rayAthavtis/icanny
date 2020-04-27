@@ -17,20 +17,14 @@ using namespace std;
 
 /*
  Canny边缘检测子算法
- 1.平滑处理：将图像与尺度为σ的高斯函数做卷积。
- 2.边缘强度计算：计算图像的边缘幅度及方向。
- 3.非极大值抑制：只有局部极大值标记为边缘。
- 4.滞后阈值化处理。
- 
- 5.对于递增的σ，重复步骤1~4。
+ 1.平滑处理：用高斯滤波器平滑图像；
+ 2.边缘强度计算：用Sobel等梯度算子计算梯度幅值和方向；
+ 3.非极大值抑制：只有局部极大值标记为边缘；
+ 4.双阈值算法检测及滞后阈值化处理连接边缘；
+
+ 5.对于递增的σ，重复步骤1~4；
  6.用特征综合方法，搜集多尺度的最终边缘信息。
  一般做前四步
- 
- 一、用高斯滤波器平滑图像
- 二、用Sobel等梯度算子计算梯度幅值和方向
- 三、对梯度幅值进行非极大值抑制
- 四、用双阈值算法检测和连接边缘
- 
 */
 
 #define PI 3.1415926
@@ -38,7 +32,7 @@ using namespace std;
 // 高斯模糊：消除噪点
 void gaussblur(Mat &src, Mat &dst, Size ksize, double sigma) {
     if( ksize.width == 1 && ksize.height == 1 ) {
-        src.copyTo(dst);//如果滤波器核的大小为1则用不着滤波
+        src.copyTo(dst);  //如果滤波器核的大小为1则用不着滤波
         return ;
     }
     int n = ksize.width;
@@ -93,7 +87,7 @@ void gaussblur1D(Mat &src, Mat &dst, Size ksize, double sigma) {
     // 归一化
     for (int i=0; i<n; i++)
         gauss[i] /= sum;
-    
+
     Mat tmp(src.rows, src.cols, CV_8U, Scalar(0));
     for (int i=0; i<src.rows; i++)
     for (int j=0; j<src.cols; j++)
@@ -134,7 +128,7 @@ void sobel(Mat &src, Mat &dst, int theta[]) {
         // a11  三维算法计算梯度
         // X = a02 + 2 * a12 + a22 - a00 - 2 * a10 - a20;
         // Y = a00 + 2 * a01 + a02 - a20 - 2 * a21 - a22;
-        
+
         int sum = sqrt(pow(x, 2) + pow(y, 2));  // 求平方根
         // int sum = abs(x) + abs(y);  // 求绝对值
         sum = sum > 255 ? 255 : sum;
@@ -186,7 +180,7 @@ void dthresproc(Mat &src, Mat &dst, double low, double high) {
         if (dst.ptr(i)[j]>high) { dst.ptr(i)[j] = 255; }
         else if (dst.ptr(i)[j]<low) { dst.ptr(i)[j] = 0; }
     imshow("dtproc", dst);
-    imwrite("/Users/renlei/XcodeSpace/icanny/outImgs/dtproc.jpg", dst);
+    imwrite("outImgs/dtproc.jpg", dst);
 }
 
 // 连接
@@ -211,23 +205,23 @@ void edgeconnect(Mat &src) {
 void icanny(Mat &src, Mat &dst, double low, double high) {
     Mat sob, nmax;
     int thta[(src.rows-1)*(src.cols-1)];
-    
+
     sobel(src, sob, thta);
     imshow("sobel", sob);
-    imwrite("/Users/renlei/XcodeSpace/icanny/outImgs/sobel.jpg", sob);
+    imwrite("outImgs/sobel.jpg", sob);
 
     Nmaxsup(sob, nmax, thta);
     imshow("nmax", nmax);
-    imwrite("/Users/renlei/XcodeSpace/icanny/outImgs/nmax.jpg", nmax);
-    
+    imwrite("outImgs/nmax.jpg", nmax);
+
     dthresproc(nmax, dst, low, high);
     edgeconnect(dst);
 }
 
 int main() {
-    Mat img = imread("/Users/renlei/XcodeSpace/icanny/imgs/lena.jpg", IMREAD_GRAYSCALE);
+    Mat img = imread("imgs/lena.jpg", IMREAD_GRAYSCALE);
     if (!img.data) {
-        cout<<"img fault!"<<endl;
+        cout<<"img error! "<<endl;
         return 0;
     }
     imshow("src", img);
@@ -239,15 +233,15 @@ int main() {
     // gaussblur(img, gauss, Size(3, 3), 3);
     gaussblur1D(img, gauss, Size(3, 3), 3);
     imshow("gauss", gauss);
-    imwrite("/Users/renlei/XcodeSpace/icanny/outImgs/gauss.jpg", gauss);
+    imwrite("outImgs/gauss.jpg", gauss);
 
     Canny(gauss, canny, 50, 100);
     imshow("canny", canny);
-    imwrite("/Users/renlei/XcodeSpace/icanny/outImgs/canny.jpg", canny);
+    imwrite("outImgs/canny.jpg", canny);
 
     icanny(gauss, icy, 50, 100);
     imshow("icanny", icy);
-    imwrite("/Users/renlei/XcodeSpace/icanny/outImgs/icanny.jpg", icy);
+    imwrite("outImgs/icanny.jpg", icy);
     waitKey(0);
     return 0;
 }
